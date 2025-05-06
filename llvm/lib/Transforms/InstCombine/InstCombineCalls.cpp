@@ -2324,6 +2324,16 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
       return BinaryOperator::CreateShl(Op0, And);
     }
 
+    // fshl(X, X, sub(0, Y)) --> fshr(X, X, Y)
+    // fshr(X, X, sub(0, Y)) --> fshl(X, X, Y)
+    Value *NegOp2;
+    if (Op0 == Op1 && match(II->getArgOperand(2), m_Neg(m_Value(NegOp2)))) {
+      Module *Mod = II->getModule();
+      Function *newShift =
+            Intrinsic::getOrInsertDeclaration(Mod, IID == Intrinsic::fshl ? Intrinsic::fshr : Intrinsic::fshl, Ty);
+      return CallInst::Create(newShift, { Op0, Op1, NegOp2 });
+    }
+
     // Left or right might be masked.
     if (SimplifyDemandedInstructionBits(*II))
       return &CI;
