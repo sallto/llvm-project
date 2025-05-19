@@ -941,7 +941,7 @@ define i32 @rotateright32_doubleand1(i32 %v, i16 %r) {
 }
 
 ; TODO: This should be a rotate (funnel-shift).
-
+;; fixme: is this testcase correct?
 define i8 @unmasked_shlop_unmasked_shift_amount(i32 %x, i32 %shamt) {
 ; CHECK-LABEL: @unmasked_shlop_unmasked_shift_amount(
 ; CHECK-NEXT:    [[MASKX:%.*]] = and i32 [[X:%.*]], 255
@@ -1085,4 +1085,14 @@ define i32 @not_rotl_i32_add_less(i32 %x, i32 %y) {
   %shr = lshr i32 %x, %sub
   %r = add i32 %shr, %shl
   ret i32 %r
+}
+
+define i32 @rotr_i32_smaller_shamt(i32 %x, i16 %y) {
+  %z = zext i16 %y to i32
+  %neg = sub nsw i32 0, %z
+  %and2 = and i32 %neg, 31
+  %shl = shl i32 %x, %and2
+  %shr = lshr i32 %x, %z
+  %or = or i32 %shr, %shl
+  ret i32 %or
 }
